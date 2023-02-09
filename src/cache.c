@@ -7,28 +7,30 @@
 /**
  * Allocate a cache entry
  */
-struct cache_entry *alloc_entry(char *path, char *content_type, void *content, int content_length)
-{
-    ///////////////////
-    // IMPLEMENT ME! //
-    ///////////////////
+cache_entry *alloc_entry(char *path, char *content_type, void *content, int content_length) {
+    cache_entry *ce = malloc(sizeof(cache_entry));
+    ce->path = path;
+    ce->content_type = content_type;
+    ce->content = content;
+    ce->content_length = content_length;
+
+    return ce;
 }
 
 /**
  * Deallocate a cache entry
  */
-void free_entry(struct cache_entry *entry)
-{
-    ///////////////////
-    // IMPLEMENT ME! //
-    ///////////////////
+void free_entry(cache_entry *entry) {
+    free(entry->path);
+    free(entry->content_type);
+    free(entry->content);
+    free(entry);
 }
 
 /**
  * Insert a cache entry at the head of the linked list
  */
-void dllist_insert_head(struct cache *cache, struct cache_entry *ce)
-{
+void cache_insert_head(cache *cache, cache_entry *ce) {
     // Insert at the head of the list
     if (cache->head == NULL) {
         cache->head = cache->tail = ce;
@@ -44,25 +46,25 @@ void dllist_insert_head(struct cache *cache, struct cache_entry *ce)
 /**
  * Move a cache entry to the head of the list
  */
-void dllist_move_to_head(struct cache *cache, struct cache_entry *ce)
-{
-    if (ce != cache->head) {
-        if (ce == cache->tail) {
-            // We're the tail
-            cache->tail = ce->prev;
-            cache->tail->next = NULL;
-
-        } else {
-            // We're neither the head nor the tail
-            ce->prev->next = ce->next;
-            ce->next->prev = ce->prev;
-        }
-
-        ce->next = cache->head;
-        cache->head->prev = ce;
-        ce->prev = NULL;
-        cache->head = ce;
+void cache_move_to_head(cache *cache, cache_entry *ce) {
+    if (ce == cache->head) {
+        return;
     }
+
+    if (ce == cache->tail) {
+        // We're the tail
+        cache->tail = ce->prev;
+        cache->tail->next = NULL;
+    } else {
+        // We're neither the head nor the tail
+        ce->prev->next = ce->next;
+        ce->next->prev = ce->prev;
+    }
+
+    ce->next = cache->head;
+    cache->head->prev = ce;
+    ce->prev = NULL;
+    cache->head = ce;
 }
 
 
@@ -71,43 +73,42 @@ void dllist_move_to_head(struct cache *cache, struct cache_entry *ce)
  * 
  * NOTE: does not deallocate the tail
  */
-struct cache_entry *dllist_remove_tail(struct cache *cache)
-{
-    struct cache_entry *oldtail = cache->tail;
+cache_entry *cache_remove_tail(cache *cache) {
+    cache_entry *old_tail = cache->tail;
 
-    cache->tail = oldtail->prev;
+    cache->tail = old_tail->prev;
     cache->tail->next = NULL;
 
-    cache->cur_size--;
+    cache->curr_size--;
 
-    return oldtail;
+    return old_tail;
 }
 
 /**
  * Create a new cache
  * 
  * max_size: maximum number of entries in the cache
- * hashsize: hashtable size (0 for default)
+ * hash_size: hashtable size (0 for default)
  */
-struct cache *cache_create(int max_size, int hashsize)
-{
-    ///////////////////
-    // IMPLEMENT ME! //
-    ///////////////////
+cache *cache_create(int max_size, int hash_size) {
+    cache *c = malloc(sizeof(cache));
+    c->max_size = max_size;
+    c->index->size = hash_size;
+
+    return c;
 }
 
-void cache_free(struct cache *cache)
-{
-    struct cache_entry *cur_entry = cache->head;
+void cache_free(cache *cache) {
+    cache_entry *curr_entry = cache->head;
 
     hashtable_destroy(cache->index);
 
-    while (cur_entry != NULL) {
-        struct cache_entry *next_entry = cur_entry->next;
+    while (curr_entry != NULL) {
+        cache_entry *next_entry = curr_entry->next;
 
-        free_entry(cur_entry);
+        free_entry(curr_entry);
 
-        cur_entry = next_entry;
+        curr_entry = next_entry;
     }
 
     free(cache);
@@ -117,22 +118,32 @@ void cache_free(struct cache *cache)
  * Store an entry in the cache
  *
  * This will also remove the least-recently-used items as necessary.
- * 
+ *
  * NOTE: doesn't check for duplicate cache entries
  */
-void cache_put(struct cache *cache, char *path, char *content_type, void *content, int content_length)
-{
-    ///////////////////
-    // IMPLEMENT ME! //
-    ///////////////////
+void cache_put(cache *c, char *path, char *content_type, void *content, int content_length) {
+    cache_entry *data = hashtable_get(c->index, path);
+
+    // 1. If entry exists in hashtable, then move it to the top in the list
+    if (data != NULL) {
+        cache_move_to_head(c, data);
+        return;
+    }
+
+    // 2. If there is not enough space, remove the tail entry from cache
+    if (c->curr_size >= c->max_size) {
+        cache_remove_tail(c);
+    }
+
+    // 3. Put the entry in the hashtable and add it to the list
+    cache_entry *ce = alloc_entry(path, content_type, content, content_length);
+    hashtable_put(c->index, path, ce);
+    cache_insert_head(c, ce);
 }
 
 /**
  * Retrieve an entry from the cache
  */
-struct cache_entry *cache_get(struct cache *cache, char *path)
-{
-    ///////////////////
-    // IMPLEMENT ME! //
-    ///////////////////
+cache_entry *cache_get(cache *c, char *path) {
+    return hashtable_get(c->index, path);
 }
