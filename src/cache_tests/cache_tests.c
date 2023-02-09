@@ -16,7 +16,7 @@ char *test_cache_create()
   mu_assert(cache, "Your cache_create function did not return a valid pointer to the created cache");
   mu_assert(cache->head == NULL, "The head pointer of the cache should be initialized to NULL");
   mu_assert(cache->tail == NULL, "The tail pointer of the cache should be initialized to NULL");
-  mu_assert(cache->cur_size == 0, "The cur_size field of the cache should be initialized to 0");
+  mu_assert(cache->curr_size == 0, "The curr_size field of the cache should be initialized to 0");
   mu_assert(cache->max_size == max_size, "The max_size field of the cache was not initialized to the expected value");
   mu_assert(cache->index != NULL, "The index field of the cache was not initialized");
 
@@ -58,7 +58,7 @@ char *test_cache_put()
   // Add in a single entry to the cache
   cache_put(cache, test_entry_1->path, test_entry_1->content_type, test_entry_1->content, test_entry_1->content_length);
   // Check that the cache is handling a single entry as expected
-  mu_assert(cache->cur_size == 1, "Your cache_put function did not correctly increment the cur_size field when adding a new cache entry");
+  mu_assert(cache->curr_size == 1, "Your cache_put function did not correctly increment the curr_size field when adding a new cache entry");
   mu_assert(cache->head->prev == NULL && cache->tail->next == NULL, "The head and tail of your cache should have NULL prev and next pointers when a new entry is put in an empty cache");
   mu_assert(check_cache_entries(cache->head, test_entry_1) == 0, "Your cache_put function did not put an entry into the head of the empty cache with the expected form");
   mu_assert(check_cache_entries(cache->tail, test_entry_1) == 0, "Your cache_put function did not put an entry into the tail of the empty cache with the expected form");
@@ -67,7 +67,7 @@ char *test_cache_put()
   // Add in a second entry to the cache
   cache_put(cache, test_entry_2->path, test_entry_2->content_type, test_entry_2->content, test_entry_2->content_length);
   // Check that the cache is handling both entries as expected
-  mu_assert(cache->cur_size == 2, "Your cache_put function did not correctly increment the cur_size field when adding a new cache entry");
+  mu_assert(cache->curr_size == 2, "Your cache_put function did not correctly increment the curr_size field when adding a new cache entry");
   mu_assert(check_cache_entries(cache->head, test_entry_2) == 0, "Your cache_put function did not put an entry into the head of the cache with the expected form");
   mu_assert(check_cache_entries(cache->tail, test_entry_1) == 0, "Your cache_put function did not move the oldest entry in the cache to the tail of the cache");
   mu_assert(check_cache_entries(cache->head->next, test_entry_1) == 0, "Your cache_put function did not correctly set the head->next pointer of the cache");
@@ -76,7 +76,7 @@ char *test_cache_put()
   // Add in a third entry to the cache
   cache_put(cache, test_entry_3->path, test_entry_3->content_type, test_entry_3->content, test_entry_3->content_length);
   // Check that the cache is handling all three entries as expected
-  mu_assert(cache->cur_size == 3, "Your cache_put function did not correctly increment the cur_size field when adding a new cache entry");
+  mu_assert(cache->curr_size == 3, "Your cache_put function did not correctly increment the curr_size field when adding a new cache entry");
   mu_assert(check_cache_entries(cache->head, test_entry_3) == 0, "Your cache_put function did not correctly update the head pointer of the cache");
   mu_assert(check_cache_entries(cache->head->next, test_entry_2) == 0, "Your cache_put function did not update the head->next pointer to point to the old head");
   mu_assert(check_cache_entries(cache->head->next->prev, test_entry_3) == 0, "Your cache_put function did not update the head->next->prev pointer to point to the new head entry");
@@ -87,7 +87,7 @@ char *test_cache_put()
   // Add in a fourth entry to the cache
   cache_put(cache, test_entry_4->path, test_entry_4->content_type, test_entry_4->content, test_entry_4->content_length);
   // Check that the cache removed the oldest entry and is handling the three most-recent entries correctly
-  mu_assert(cache->cur_size == 3, "Your cache_put function did not correctly handle the cur_size field when adding a new cache entry to a full cache");
+  mu_assert(cache->curr_size == 3, "Your cache_put function did not correctly handle the curr_size field when adding a new cache entry to a full cache");
   mu_assert(check_cache_entries(cache->head, test_entry_4) == 0, "Your cache_put function did not correctly handle adding a new entry to an already-full cache");
   mu_assert(check_cache_entries(cache->head->next, test_entry_3) == 0, "Your cache_put function did not update the head->next pointer to point to the old head");
   mu_assert(check_cache_entries(cache->head->next->prev, test_entry_4) == 0, "Your cache_put function did not update the head->next->prev pointer to point to the new head entry");

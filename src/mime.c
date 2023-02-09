@@ -7,8 +7,7 @@
 /**
  * Lowercase a string
  */
-char *strlower(char *s)
-{
+char *strlower(char *s) {
     for (char *p = s; *p != '\0'; p++) {
         *p = tolower(*p);
     }
@@ -19,14 +18,13 @@ char *strlower(char *s)
 /**
  * Return a MIME type for a given filename
  */
-char *mime_type_get(char *filename)
-{
+char *mime_type_get(char *filename) {
     char *ext = strrchr(filename, '.');
 
     if (ext == NULL) {
         return DEFAULT_MIME_TYPE;
     }
-    
+
     ext++;
 
     strlower(ext);

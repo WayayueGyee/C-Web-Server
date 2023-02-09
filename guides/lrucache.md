@@ -7,7 +7,7 @@ retrieval and lookup. Hitting the cache for a piece of data should be faster
 than getting it from the original source.
 
 The idea is that if lots of people want access to this piece of data, you copy
-it into the faster cache so they all get it in a more timely manner.
+it into the faster cache, so they all get it in a more timely manner.
 
 There is a cache on your CPU that keeps commonly-used parts of RAM so the CPU
 doesn't have to wait for the slower RAM each time.
@@ -74,7 +74,7 @@ A _cache entry_ will contain copies of all the information needed to serve the
 file again if it is retrieved from the cache. For a webserver, this is things
 like content MIME type, content length, and the content itself.
 
-Additionally the cache entry should have `prev` and `next` pointers so it can be
+Additionally, the cache entry should have `prev` and `next` pointers, so it can be
 used in a doubly linked list.
 
 Finally, it should also contain a copy of the key.

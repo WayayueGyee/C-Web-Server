@@ -52,26 +52,25 @@ struct htent {
     void *data;
 };
 
-// Used to cleanup the linked lists
+// Used to clean up the linked lists
 struct foreach_callback_payload {
-	void *arg;
-	void (*f)(void *, void *);
+    void *arg;
+
+    void (*f)(void *, void *);
 };
 
 /**
  * Change the entry count, maintain load metrics
  */
-void add_entry_count(struct hashtable *ht, int d)
-{
+void add_entry_count(struct hashtable *ht, int d) {
     ht->num_entries += d;
-    ht->load = (float)ht->num_entries / ht->size;
+    ht->load = (float) ht->num_entries / ht->size;
 }
 
 /**
  * Default modulo hashing function
  */
-int default_hashf(void *data, int data_size, int bucket_count)
-{
+int default_hashf(void *data, int data_size, int bucket_count) {
     const int R = 31; // Small prime
     int h = 0;
     unsigned char *p = data;
@@ -86,8 +85,7 @@ int default_hashf(void *data, int data_size, int bucket_count)
 /**
  * Create a new hashtable
  */
-struct hashtable *hashtable_create(int size, int (*hashf)(void *, int, int))
-{
+struct hashtable *hashtable_create(int size, int (*hashf)(void *, int, int)) {
     if (size < 1) {
         size = DEFAULT_SIZE;
     }
@@ -116,11 +114,10 @@ struct hashtable *hashtable_create(int size, int (*hashf)(void *, int, int))
 /**
  * Free an htent
  */
-void htent_free(void *htent, void *arg)
-{
-	(void)arg;
+void htent_free(void *htent, void *arg) {
+    (void) arg;
 
-	free(htent);
+    free(htent);
 }
 
 /**
@@ -128,12 +125,11 @@ void htent_free(void *htent, void *arg)
  *
  * NOTE: does *not* free the data pointer
  */
-void hashtable_destroy(struct hashtable *ht)
-{
+void hashtable_destroy(struct hashtable *ht) {
     for (int i = 0; i < ht->size; i++) {
         struct llist *llist = ht->bucket[i];
 
-		llist_foreach(llist, htent_free, NULL);
+        llist_foreach(llist, htent_free, NULL);
         llist_destroy(llist);
     }
 
@@ -143,16 +139,16 @@ void hashtable_destroy(struct hashtable *ht)
 /**
  * Put to hash table with a string key
  */
-void *hashtable_put(struct hashtable *ht, char *key, void *data)
-{
+void *hashtable_put(struct hashtable *ht, char *key, void *data) {
     return hashtable_put_bin(ht, key, strlen(key), data);
 }
 
 /**
- * Put to hash table with a binary key
+ * Put to hash table with a binary key\n
+ *
+ * NOTE: this method probably does not create new entry
  */
-void *hashtable_put_bin(struct hashtable *ht, void *key, int key_size, void *data)
-{
+void *hashtable_put_bin(struct hashtable *ht, void *key, int key_size, void *data) {
     int index = ht->hashf(key, key_size, ht->size);
 
     struct llist *llist = ht->bucket[index];
@@ -178,8 +174,7 @@ void *hashtable_put_bin(struct hashtable *ht, void *key, int key_size, void *dat
 /**
  * Comparison function for hashtable entries
  */
-int htcmp(void *a, void *b)
-{
+int htcmp(void *a, void *b) {
     struct htent *entA = a, *entB = b;
 
     int size_diff = entB->key_size - entA->key_size;
@@ -193,17 +188,19 @@ int htcmp(void *a, void *b)
 
 /**
  * Get from the hash table with a string key
+ *
+ * @returns <code>data</code> field of the hashtable entity. If there is no such entity, returns <code>NULL</code>
  */
-void *hashtable_get(struct hashtable *ht, char *key)
-{
+void *hashtable_get(struct hashtable *ht, char *key) {
     return hashtable_get_bin(ht, key, strlen(key));
 }
 
 /**
  * Get from the hash table with a binary data key
+ *
+ * @returns data field of the hashtable entity. If there is no such entity, returns <code>NULL</code>
  */
-void *hashtable_get_bin(struct hashtable *ht, void *key, int key_size)
-{
+void *hashtable_get_bin(struct hashtable *ht, void *key, int key_size) {
     int index = ht->hashf(key, key_size, ht->size);
 
     struct llist *llist = ht->bucket[index];
@@ -222,18 +219,16 @@ void *hashtable_get_bin(struct hashtable *ht, void *key, int key_size)
 /**
  * Delete from the hashtable by string key
  */
-void *hashtable_delete(struct hashtable *ht, char *key)
-{
+void *hashtable_delete(struct hashtable *ht, char *key) {
     return hashtable_delete_bin(ht, key, strlen(key));
 }
 
 /**
  * Delete from the hashtable by binary key
  *
- * NOTE: does *not* free the data--just free's the hash table entry
+ * @note Does not free the data--just free's the hash table entry
  */
-void *hashtable_delete_bin(struct hashtable *ht, void *key, int key_size)
-{
+void *hashtable_delete_bin(struct hashtable *ht, void *key, int key_size) {
     int index = ht->hashf(key, key_size, ht->size);
 
     struct llist *llist = ht->bucket[index];
@@ -244,28 +239,27 @@ void *hashtable_delete_bin(struct hashtable *ht, void *key, int key_size)
 
     struct htent *ent = llist_delete(llist, &cmpent, htcmp);
 
-	if (ent == NULL) {
-		return NULL;
-	}
+    if (ent == NULL) {
+        return NULL;
+    }
 
-	void *data = ent->data;
+    void *data = ent->data;
 
-	free(ent);
+    free(ent);
 
     add_entry_count(ht, -1);
 
-	return data;
+    return data;
 }
 
 /**
  * Foreach callback function
  */
-void foreach_callback(void *vent, void *vpayload)
-{
-	struct htent *ent = vent;
-	struct foreach_callback_payload *payload = vpayload;
+void foreach_callback(void *vent, void *vpayload) {
+    struct htent *ent = vent;
+    struct foreach_callback_payload *payload = vpayload;
 
-	payload->f(ent->data, payload->arg);
+    payload->f(ent->data, payload->arg);
 }
 
 /**
@@ -273,16 +267,15 @@ void foreach_callback(void *vent, void *vpayload)
  *
  * Note: elements are returned in effectively random order.
  */
-void hashtable_foreach(struct hashtable *ht, void (*f)(void *, void *), void *arg)
-{
-	struct foreach_callback_payload payload;
+void hashtable_foreach(struct hashtable *ht, void (*f)(void *, void *), void *arg) {
+    struct foreach_callback_payload payload;
 
-	payload.f = f;
-	payload.arg = arg;
+    payload.f = f;
+    payload.arg = arg;
 
-	for (int i = 0; i < ht->size; i++) {
-		struct llist *llist = ht->bucket[i];
+    for (int i = 0; i < ht->size; i++) {
+        struct llist *llist = ht->bucket[i];
 
-		llist_foreach(llist, foreach_callback, &payload);
-	}
+        llist_foreach(llist, foreach_callback, &payload);
+    }
 }

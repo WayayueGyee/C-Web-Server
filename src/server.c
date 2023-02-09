@@ -48,8 +48,7 @@
  * 
  * Return the value from the send() function.
  */
-int send_response(int fd, char *header, char *content_type, void *body, int content_length)
-{
+int send_response(int fd, char *header, char *content_type, void *body, int content_length) {
     const int max_response_size = 262144;
     char response[max_response_size];
 
@@ -73,10 +72,9 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
 /**
  * Send a /d20 endpoint response
  */
-void get_d20(int fd)
-{
+void get_d20(int fd) {
     // Generate a random number between 1 and 20 inclusive
-    
+
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
@@ -91,10 +89,9 @@ void get_d20(int fd)
 /**
  * Send a 404 response
  */
-void resp_404(int fd)
-{
+void resp_404(int fd) {
     char filepath[4096];
-    struct file_data *filedata; 
+    struct file_data *filedata;
     char *mime_type;
 
     // Fetch the 404.html file
@@ -117,8 +114,7 @@ void resp_404(int fd)
 /**
  * Read and return a file from disk or cache
  */
-void get_file(int fd, struct cache *cache, char *request_path)
-{
+void get_file(int fd, struct cache *cache, char *request_path) {
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
@@ -130,8 +126,7 @@ void get_file(int fd, struct cache *cache, char *request_path)
  * "Newlines" in HTTP can be \r\n (carriage return followed by newline) or \n
  * (newline) or \r (carriage return).
  */
-char *find_start_of_body(char *header)
-{
+char *find_start_of_body(char *header) {
     ///////////////////
     // IMPLEMENT ME! // (Stretch)
     ///////////////////
@@ -140,8 +135,7 @@ char *find_start_of_body(char *header)
 /**
  * Handle HTTP request and send response
  */
-void handle_http_request(int fd, struct cache *cache)
-{
+void handle_http_request(int fd, struct cache *cache) {
     const int request_buffer_size = 65536; // 64K
     char request[request_buffer_size];
 
@@ -159,7 +153,7 @@ void handle_http_request(int fd, struct cache *cache)
     ///////////////////
 
     // Read the first two components of the first line of the request 
- 
+
     // If GET, handle the get endpoints
 
     //    Check if it's /d20 and handle that special case
@@ -172,8 +166,7 @@ void handle_http_request(int fd, struct cache *cache)
 /**
  * Main
  */
-int main(void)
-{
+int main(void) {
     int newfd;  // listen on sock_fd, new connection on newfd
     struct sockaddr_storage their_addr; // connector's address information
     char s[INET6_ADDRSTRLEN];
@@ -193,13 +186,13 @@ int main(void)
     // This is the main loop that accepts incoming connections and
     // responds to the request. The main parent process
     // then goes back to waiting for new connections.
-    
-    while(1) {
+
+    while (1) {
         socklen_t sin_size = sizeof their_addr;
 
-        // Parent process will block on the accept() call until someone
+        // Parent process will block on the `accept()` call until someone
         // makes a new connection:
-        newfd = accept(listenfd, (struct sockaddr *)&their_addr, &sin_size);
+        newfd = accept(listenfd, (struct sockaddr *) &their_addr, &sin_size);
         if (newfd == -1) {
             perror("accept");
             continue;
@@ -207,10 +200,10 @@ int main(void)
 
         // Print out a message that we got the connection
         inet_ntop(their_addr.ss_family,
-            get_in_addr((struct sockaddr *)&their_addr),
-            s, sizeof s);
+                  get_in_addr((struct sockaddr *) &their_addr),
+                  s, sizeof s);
         printf("server: got connection from %s\n", s);
-        
+
         // newfd is a new socket descriptor for the new connection.
         // listenfd is still listening for new connections.
 
